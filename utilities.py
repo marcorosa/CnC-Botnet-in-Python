@@ -11,10 +11,14 @@ def end():
 
 def menu():
     print "=" * 33 + "\nMENU\n" + "=" * 33
-    descriptions = ["Load host from external file", "Print host list",
-                    "Check active hosts", "Select bots",
-                    "Execute command locally", "Execute command on bots",
-                    "Open shell", "Exit"]
+    descriptions = ["Load host from external file",
+                    "Print host list",
+                    "Check active hosts",
+                    "Select bots",
+                    "Execute command locally",
+                    "Execute command on bots",
+                    "Open shell",
+                    "Exit"]
     for num, func in enumerate(descriptions):
         print "[" + str(num) + "] " + func
     choice = raw_input(">>> ")

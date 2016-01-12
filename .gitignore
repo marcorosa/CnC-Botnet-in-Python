@@ -3,3 +3,6 @@ hosts.txt
 
 # Paramiko logs
 paramiko.log
+
+# .pyc files
+*.pyc

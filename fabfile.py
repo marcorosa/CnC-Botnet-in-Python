@@ -35,27 +35,29 @@ def load_hosts():
 
 
 def print_hosts():
-    hosts = map(lambda x: [x], env.hosts)
-    print tabulate(hosts, ["Host"])
+    """
+    """
+    hosts = map(lambda x: [x, env.passwords.get(x, None)], env.hosts)
+    print tabulate(hosts, ["Host", "Password"])
 
 
 def check_hosts():
+    """
+    """
     global running_hosts
-    global selected_hosts
     running_hosts = dict()
-    selected_hosts = []
     for host, result in execute(execute_command, "uptime", hosts=env.hosts).iteritems():
         if result.succeeded:
             running_hosts[host] = True
-            selected_hosts.append(host)
         else:
             running_hosts[host] = False
-    print_dict_table(running_hosts)
-
-
-def print_dict_table(d):
-    mylist = map(lambda index: [index[0], index[1]], d.items())
+    # Convert running_hosts in order to print it as table
+    mylist = map(lambda index: [index[0], index[1]], running_hosts.items())
     print tabulate(mylist, ["Host", "Running"])
+
+
+def select_hosts():
+    pass
 
 
 def print_selected_hosts():
@@ -66,23 +68,29 @@ def print_selected_hosts():
     # print tabulate(selectedList, ["Host", "Running"])
 
 
-def select_hosts():
-    pass
-
-
 def execute_command(command):
-    if command.strip()[:5] == "sudo":
-        results = sudo(command, shell=False)
-    else:
-        results = run(command)
-    return results
-
-
-def run_command():
-    cmd = raw_input("Insert command: ")
-    execute(execute_command, cmd, hosts=selected_hosts)
+    """
+    """
+    try:
+        if command.strip()[:5] == "sudo":
+            results = sudo(command, shell=False)
+        else:
+            results = run(command)
+        return results
+    except Exception as ex:
+        print "Error: " + ex
+        return "Error"
 
 
 def run_locally():
+    """
+    """
     cmd = raw_input("Insert command: ")
     local(cmd)
+
+
+def run_command():
+    """
+    """
+    cmd = raw_input("Insert command: ")
+    execute(execute_command, cmd, hosts=selected_hosts)
