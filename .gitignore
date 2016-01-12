@@ -1,0 +1,5 @@
+# Hosts file
+hosts.txt
+
+# Paramiko logs
+paramiko.log
