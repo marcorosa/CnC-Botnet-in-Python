@@ -13,6 +13,7 @@ if __name__ == '__main__':
           '5': choose_hosts,
           '6': run_locally,
           '7': run_command,
+          '8': execute_script,
           '9': end}
     while True:
         choice = menu()

@@ -146,3 +146,10 @@ def run_command():
     """
     cmd = raw_input("Insert command: ")
     execute(execute_command, cmd, hosts=selected_hosts)
+
+
+def execute_script():
+    path = raw_input("Path of the script: ")
+    with open(path, 'r') as f:
+        with hide('running'):
+            execute(execute_command, f.read(), hosts=selected_hosts)
