@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from fabric.api import env, run, sudo, execute, local
+from fabric.api import env, run, sudo, execute, local, settings, hide
 import paramiko
 from tabulate import tabulate
 
@@ -14,10 +14,12 @@ running_hosts = {}
 
 def load_hosts():
     """
-    Load hosts from hosts.txt. A host can either be in form
-    username@host password
+    Load hosts from hosts.txt.
+    A host can either be in form
+    username@host[:port] password
         or
-    username@hotst
+    username@host[:port]
+    If no port is specified, port 22 is selected.
     """
     with open("hosts.txt", "r") as f:
         data = f.readlines()
@@ -36,61 +38,85 @@ def load_hosts():
 
 def print_hosts():
     """
+    Print selected hosts.
+    If you haven't hand-select hosts yet, all hosts are selected.
     """
-    hosts = map(lambda x: [x, env.passwords.get(x, None)], env.hosts)
+    global selected_hosts
+    hosts = map(lambda x: [x, env.passwords.get(x, None)], selected_hosts)
     print tabulate(hosts, ["Host", "Password"])
 
 
 def check_hosts():
     """
+    Check if hosts are running or not.
     """
     global running_hosts
     running_hosts = dict()
-    for host, result in execute(execute_command, "uptime", hosts=env.hosts).iteritems():
-        if result.succeeded:
-            running_hosts[host] = True
-        else:
-            running_hosts[host] = False
+    with hide('stdout'):
+        for host, result in execute(execute_command, "uptime", hosts=env.hosts).iteritems():
+            if result.succeeded:
+                running_hosts[host] = True
+            else:
+                running_hosts[host] = False
     # Convert running_hosts in order to print it as table
     mylist = map(lambda index: [index[0], index[1]], running_hosts.items())
     print tabulate(mylist, ["Host", "Running"])
 
 
-def select_hosts():
-    pass
+def select_running_hosts():
+    """
+    Select all running hosts.
+    """
+    global selected_hosts
+    with hide('stdout'):
+        check_hosts()
+    selected_hosts = running_hosts.keys()
 
 
-def print_selected_hosts():
-    check_hosts()
-    print "Selected hosts:"
-    print "-" * 25
-    # selectedList = map(lambda index: [index[0], index[1]], selected_hosts.items())
-    # print tabulate(selectedList, ["Host", "Running"])
+def choose_hosts():
+    """
+    Select hosts you want to use.
+    """
+    global selected_hosts
+    selected_hosts = []
+    mylist = map(lambda (num, h): [num, h], enumerate(env.hosts))
+    print "Select Hosts:"
+    print tabulate(mylist, ["Number", "Host"])
+    choices = raw_input("> ").split()
+    # Avoid letters in string index
+    choices = filter(lambda x: x.isalnum(), choices)
+    # Convert to int list
+    choices = map(lambda x: int(x), choices)
+    # Avoid IndexError
+    choices = filter(lambda x: x < len(env.hosts), choices)
+    # Get only selected hosts
+    selected_hosts = map(lambda i: env.hosts[i], choices)
 
 
 def execute_command(command):
     """
+    Execute a command on a host.
     """
-    try:
+    with settings(warn_only=True):
         if command.strip()[:5] == "sudo":
             results = sudo(command, shell=False)
         else:
             results = run(command)
         return results
-    except Exception as ex:
-        print "Error: " + ex
-        return "Error"
 
 
 def run_locally():
     """
+    Execute a command locally.
     """
     cmd = raw_input("Insert command: ")
-    local(cmd)
+    with settings(warn_only=True):
+        local(cmd)
 
 
 def run_command():
     """
+    Execute a command on a host.
     """
     cmd = raw_input("Insert command: ")
     execute(execute_command, cmd, hosts=selected_hosts)

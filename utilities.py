@@ -14,6 +14,7 @@ def menu():
     descriptions = ["Load host from external file",
                     "Print host list",
                     "Check active hosts",
+                    "Select only running hosts",
                     "Select bots",
                     "Execute command locally",
                     "Execute command on bots",
