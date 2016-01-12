@@ -12,9 +12,10 @@ def end():
 def menu():
     print "=" * 33 + "\nMENU\n" + "=" * 33
     descriptions = ["Load host from external file",
-                    "Print host list",
+                    "Add a new host",
+                    "Print selected hosts",
                     "Check active hosts",
-                    "Select only running hosts",
+                    "Select only active hosts",
                     "Select bots",
                     "Execute command locally",
                     "Execute command on bots",

@@ -2,9 +2,11 @@
 
 from fabric.api import env, run, sudo, execute, local, settings, hide
 import paramiko
+import getpass
 from tabulate import tabulate
 
 
+file_hosts = "hosts.txt"
 paramiko.util.log_to_file("paramiko.log")
 env.colorize_errors = True
 # The selected hosts are the hosts in env (at the beginning)
@@ -21,7 +23,7 @@ def load_hosts():
     username@host[:port]
     If no port is specified, port 22 is selected.
     """
-    with open("hosts.txt", "r") as f:
+    with open(file_hosts, "r") as f:
         data = f.readlines()
         for line in data:
             try:
@@ -34,6 +36,30 @@ def load_hosts():
             env.hosts.append(host)
             if password is not None:
                 env.passwords[host] = password.strip()
+
+
+def add_host():
+    """
+    Add a new host to the running hosts.
+    Add the new host also to the external host file.
+    """
+    name = raw_input("Username: ")
+    host = raw_input("Host: ")
+    port = input("Port: ")
+    new_host = name + "@" + host + ":" + str(port)
+    selected_hosts.append(new_host)
+    auth = raw_input("Authenticate using a password? (y/n)").lower()
+    password = None
+    if auth == 'y':
+        # password = raw_input("Password: ")
+        password = getpass.getpass("Password: ").strip()
+        env.passwords[new_host] = password
+    if password is not None:
+        line = new_host + " " + password + "\n"
+    else:
+        line = new_host + "\n"
+    with open(file_hosts, 'a') as f:
+        f.write(line)
 
 
 def print_hosts():
