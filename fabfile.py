@@ -80,13 +80,14 @@ def check_hosts():
     global running_hosts
     running_hosts = dict()
     for host in selected_hosts:
+        print "\nPing host " + str(selected_hosts.index(host) + 1) + " of " + str(len(selected_hosts))
         response = os.system("ping -c 1 " + host.split("@")[1].split(":")[0])
         if response == 0:
             running_hosts[host] = True
         else:
             running_hosts[host] = False
     # Convert running_hosts in order to print it as table
-    mylist = map(lambda index: [index[0], index[1]], running_hosts.items())
+    mylist = map(lambda index: [index[0], str(index[1])], running_hosts.items())
     print tabulate(mylist, ["Host", "Running"])
 
 
