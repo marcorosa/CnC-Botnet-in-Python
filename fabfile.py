@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 from fabric.api import env, run, sudo, execute, local, settings, hide
 import paramiko
 import getpass
@@ -78,12 +79,12 @@ def check_hosts():
     """
     global running_hosts
     running_hosts = dict()
-    with hide('stdout'):
-        for host, result in execute(execute_command, "uptime", hosts=env.hosts).iteritems():
-            if result.succeeded:
-                running_hosts[host] = True
-            else:
-                running_hosts[host] = False
+    for host in selected_hosts:
+        response = os.system("ping -c 1 " + host.split("@")[1].split(":")[0])
+        if response == 0:
+            running_hosts[host] = True
+        else:
+            running_hosts[host] = False
     # Convert running_hosts in order to print it as table
     mylist = map(lambda index: [index[0], index[1]], running_hosts.items())
     print tabulate(mylist, ["Host", "Running"])
