@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 import os
-from fabric.api import env, run, sudo, execute, local, settings, hide, put, open_shell
+from fabric.api import env, run, sudo, execute, local, settings, hide, open_shell, parallel
+from fabric.contrib.console import confirm
 import paramiko
 import getpass
 from tabulate import tabulate
@@ -49,12 +50,11 @@ def add_host():
     port = input("Port: ")
     new_host = name + "@" + host + ":" + str(port)
     selected_hosts.append(new_host)
-    auth = raw_input("Authenticate using a password? (y/n)").lower()
     password = None
-    if auth == 'y':
-        # password = raw_input("Password: ")
+    if confirm("Authenticate using a password "):
         password = getpass.getpass("Password: ").strip()
         env.passwords[new_host] = password
+    # Append the new host to the hosts file
     if password is not None:
         line = new_host + " " + password + "\n"
     else:
@@ -122,6 +122,7 @@ def choose_hosts():
     selected_hosts = map(lambda i: env.hosts[i], choices)
 
 
+@parallel
 def execute_command(command):
     """
     Execute a command on a host.
@@ -134,39 +135,38 @@ def execute_command(command):
         return results
 
 
-def run_locally():
+def run_locally(cmd=None):
     """
     Execute a command locally.
     """
-    cmd = raw_input("Insert command: ")
+    if cmd is None:
+        cmd = raw_input("Insert command: ")
     with settings(warn_only=True):
         local(cmd)
 
 
-def run_command():
+@parallel
+def run_command(cmd=None):
     """
     Execute a command on a host.
     """
-    cmd = raw_input("Insert command: ")
+    if cmd is None:
+        cmd = raw_input("Insert command: ")
     execute(execute_command, cmd, hosts=selected_hosts)
 
 
 def execute_script():
-    path = raw_input("Path of the script: ")
-    """ Python script:
-    for host in selected_hosts:
-        cmd = "ssh " + host.split(":")[0] + " python -s < " + path
-        local(cmd)
-    """
-    with open(path, 'r') as f:
-        with hide('running'):
-            execute(execute_command, f.read(), hosts=selected_hosts)
-
-
-def scp():
-    script = raw_input("What file? ")
-    path = raw_input("What path? ")
-    put(script, path, mode=0755)
+    script_file = raw_input("Name of the script: ")
+    host_path = "/tmp"
+    # Copy the script on bots
+    for h in selected_hosts:
+        with hide('stdout', 'running'):
+            run_locally('scp %s %s:%s' % (script_file, h.split(':')[0], host_path))
+    # Execute script
+    run_command(host_path + "/" + script_file)
+    # Delete script
+    with hide('running'):
+        run_command("rm " + host_path + "/" + script_file)
 
 
 def open_sh():
@@ -176,5 +176,5 @@ def open_sh():
     try:
         h = selected_hosts[n]
         execute(open_shell, host=h)
-    except Exception as ex:
-        print ex
+    except Exception:
+        print "Error. Shell not opened."
