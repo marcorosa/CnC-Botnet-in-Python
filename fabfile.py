@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os
-from fabric.api import env, run, sudo, execute, local, settings, hide
+from fabric.api import env, run, sudo, execute, local, settings, hide, put, open_shell
 import paramiko
 import getpass
 from tabulate import tabulate
@@ -98,7 +98,8 @@ def select_running_hosts():
     global selected_hosts
     with hide('stdout'):
         check_hosts()
-    selected_hosts = running_hosts.keys()
+    host_up = filter(lambda x: running_hosts.get(x, False), running_hosts.keys())
+    selected_hosts = host_up
 
 
 def choose_hosts():
@@ -152,6 +153,28 @@ def run_command():
 
 def execute_script():
     path = raw_input("Path of the script: ")
+    """ Python script:
+    for host in selected_hosts:
+        cmd = "ssh " + host.split(":")[0] + " python -s < " + path
+        local(cmd)
+    """
     with open(path, 'r') as f:
         with hide('running'):
             execute(execute_command, f.read(), hosts=selected_hosts)
+
+
+def scp():
+    script = raw_input("What file? ")
+    path = raw_input("What path? ")
+    put(script, path, mode=0755)
+
+
+def open_sh():
+    mylist = map(lambda (num, h): [num, h], enumerate(selected_hosts))
+    print tabulate(mylist, ["Number", "Host"])
+    n = input("Open shell in host number: ")
+    try:
+        h = selected_hosts[n]
+        execute(open_shell, host=h)
+    except Exception as ex:
+        print ex

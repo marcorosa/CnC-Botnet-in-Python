@@ -20,6 +20,8 @@ def menu():
                     "Execute command locally",
                     "Execute command on bots",
                     "Run external script",
+                    "Open shell in a host",
+                    "Put file",
                     "Exit"]
     for num, func in enumerate(descriptions):
         print "[" + str(num) + "] " + func

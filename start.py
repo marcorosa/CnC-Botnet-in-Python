@@ -14,7 +14,9 @@ if __name__ == '__main__':
           '6': run_locally,
           '7': run_command,
           '8': execute_script,
-          '9': end}
+          '9': open_sh,
+          '10': scp,
+          '11': end}
     while True:
         choice = menu()
         df.get(choice, choice_error)()
