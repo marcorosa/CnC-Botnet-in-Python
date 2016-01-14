@@ -13,7 +13,7 @@ The default format for this file is:
 username@host:port password
 ```
 
-If the port is not indicated, port 22 is used:
+If the port number is not declared, port 22 is used:
 ```bash
 username@host password
 ```
@@ -25,7 +25,7 @@ username@host
 <h2>Usage</h2>
 To start the application, simply download the repository
 ```bash
-https://github.com/marcorosa/CC-Botnet-in-Python
+git clone https://github.com/marcorosa/CC-Botnet-in-Python
 cd CC-Botnet-in-Python
 ```
 Create the _hosts.txt_ file (optional, see above), and run the start script
@@ -33,3 +33,21 @@ Create the _hosts.txt_ file (optional, see above), and run the start script
 python start.py
 ```
 
+<h2>Example</h2>
+```bash
+=================================
+MENU
+=================================
+[0] Load host from external file
+[1] Add a new host
+[2] Print selected hosts
+[3] Check active hosts
+[4] Select only active hosts
+[5] Select bots
+[6] Execute command locally
+[7] Execute command on bots
+[8] Run external script
+[9] Open shell in a host
+[10] Exit
+>>> 
+```
