@@ -1,4 +1,4 @@
-# CC-Botnet-in-Python
+# CnC-Botnet-in-Python
 C&#38;C Botnet written in Python
 
 <h2>Description</h2>
