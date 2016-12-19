@@ -6,3 +6,6 @@ paramiko.log
 
 # .pyc files
 *.pyc
+
+# Python virtualenv
+venv
