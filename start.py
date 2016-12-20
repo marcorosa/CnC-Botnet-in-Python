@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-from fabfile import *
-from utilities import *
+from botnet.fabfile import *
+from botnet.utilities import *
 
 
 if __name__ == '__main__':
