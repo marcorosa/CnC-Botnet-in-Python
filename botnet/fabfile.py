@@ -1,6 +1,7 @@
 import os
 from fabric.api import env, run, sudo, execute, local, settings, hide, open_shell, parallel
 from fabric.contrib.console import confirm
+import fabric.colors as fab_col
 import paramiko
 import getpass
 from tabulate import tabulate
@@ -50,7 +51,7 @@ def add_host():
     new_host = name + "@" + host + ":" + str(port)
     selected_hosts.append(new_host)
     password = None
-    if confirm("Authenticate using a password "):
+    if confirm("Authenticate using a password? "):
         password = getpass.getpass("Password: ").strip()
         env.passwords[new_host] = password
 
@@ -70,7 +71,7 @@ def print_hosts():
     If hosts haven't been hand-selected yet, all hosts are selected.
     """
     hosts = map(lambda x: [x, env.passwords.get(x, None)], selected_hosts)
-    print tabulate(hosts, ["Host", "Password"])
+    print(tabulate(hosts, ["Host", "Password"]))
 
 
 def check_hosts():
@@ -80,8 +81,8 @@ def check_hosts():
     global running_hosts
     running_hosts = dict()
     for host in selected_hosts:
-        print "\nPing host %d of %d" % (selected_hosts.index(host) + 1,
-                                        len(selected_hosts))
+        print(fab_col.magenta("\nPing host %d of %d" %
+              (selected_hosts.index(host) + 1, len(selected_hosts))))
         response = os.system("ping -c 1 " + host.split("@")[1].split(":")[0])
         if response == 0:
             running_hosts[host] = True
@@ -89,7 +90,7 @@ def check_hosts():
             running_hosts[host] = False
     # Convert running_hosts in order to print it as table
     mylist = map(lambda index: [index[0], str(index[1])], running_hosts.items())
-    print tabulate(mylist, ["Host", "Running"])
+    print(fab_col.green(tabulate(mylist, ["Host", "Running"])))
 
 
 def select_running_hosts():
@@ -111,8 +112,8 @@ def choose_hosts():
     global selected_hosts
     selected_hosts = []
     mylist = map(lambda (num, h): [num, h], enumerate(env.hosts))
-    print "Select Hosts:"
-    print tabulate(mylist, ["Number", "Host"])
+    print(fab_col.blue("Select Hosts (space-separated):"))
+    print(fab_col.blue(tabulate(mylist, ["Number", "Host"])))
     choices = raw_input("> ").split()
     # Avoid letters in string index
     choices = filter(lambda x: x.isalnum(), choices)
@@ -134,14 +135,15 @@ def run_locally(cmd=None):
         local(cmd)
 
 
-@parallel
+# This function cannot have the parallel decorator since
+# a sudo command must receive the user password
 def _execute_command(command):
     """
     Execute a command on a host.
     """
     with settings(warn_only=True):
         if command.strip()[:5] == "sudo":
-            results = sudo(command, shell=False)
+            results = sudo(command.strip()[5:], shell=False)
         else:
             results = run(command)
         return results
@@ -181,10 +183,10 @@ def open_sh():
     Open a shell on a host.
     """
     mylist = map(lambda (num, h): [num, h], enumerate(selected_hosts))
-    print tabulate(mylist, ["Number", "Host"])
+    print(fab_col.blue(tabulate(mylist, ["Number", "Host"])))
     n = input("Open shell in host number: ")
     try:
         h = selected_hosts[n]
         execute(open_shell, host=h)
     except Exception:
-        print "Error. Shell not opened."
+        print(fab_col.red("Error. Shell not opened."))
