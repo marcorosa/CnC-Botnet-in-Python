@@ -30,7 +30,7 @@ def load_hosts():
         for line in data:
             try:
                 host, password = line.strip().split()
-            except Exception:
+            except ValueError:
                 host = line.strip()
                 password = None
             if len(host.split(':')) == 1:
@@ -54,13 +54,15 @@ def add_host():
     if confirm("Authenticate using a password "):
         password = getpass.getpass("Password: ").strip()
         env.passwords[new_host] = password
+
     # Append the new host to the hosts file
-    if password is not None:
-        line = new_host + " " + password + "\n"
-    else:
-        line = new_host + "\n"
-    with open(file_hosts, 'a') as f:
-        f.write(line)
+    if confirm("Add the new host to the hosts file? "):
+        if password is not None:
+            line = new_host + " " + password + "\n"
+        else:
+            line = new_host + "\n"
+        with open(file_hosts, 'a') as f:
+            f.write(line)
 
 
 def print_hosts():
