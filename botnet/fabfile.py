@@ -1,6 +1,6 @@
 import os
 from fabric.api import env, run, sudo, execute, local, settings, \
-    hide, open_shell, parallel
+    hide, open_shell, parallel, serial
 from fabric.contrib.console import confirm
 import fabric.colors as fab_col
 import paramiko
@@ -14,6 +14,8 @@ env.colorize_errors = True
 # The selected hosts are the hosts in env (at the beginning)
 selected_hosts = env.hosts
 running_hosts = {}
+env.connection_attempts = 2
+# env.skip_bad_hosts = True
 
 
 def load_hosts():
@@ -38,6 +40,7 @@ def load_hosts():
             env.hosts.append(host)
             if password is not None:
                 env.passwords[host] = password.strip()
+        env.hosts = list(set(env.hosts))  # Remove duplicates
 
 
 def add_host():
@@ -138,26 +141,41 @@ def run_locally(cmd=None):
 
 # This function cannot have the parallel decorator since
 # a sudo command must receive the user password
+@serial
+def _execute_sudo(command):
+    """
+    Execute a sudo command on a host.
+
+    Returns:
+        The results of the execution.
+    """
+    with settings(warn_only=True):
+        return sudo(command[4:].strip(), shell=True)
+
+
+@parallel
 def _execute_command(command):
     """
     Execute a command on a host.
+
+    Returns:
+        The results of the execution.
     """
     with settings(warn_only=True):
-        if command.strip()[:5] == "sudo":
-            results = sudo(command.strip()[5:], shell=False)
-        else:
-            results = run(command)
-        return results
+        return run(command)
 
 
 @parallel
 def run_command(cmd=None):
     """
-    Execute a command on a host.
+    Execute a command on hosts.
     """
     if cmd is None:
         cmd = raw_input("Insert command: ")
-    execute(_execute_command, cmd, hosts=selected_hosts)
+    if cmd.strip()[:4] == "sudo":
+        execute(_execute_sudo, cmd, hosts=selected_hosts)
+    else:
+        execute(_execute_command, cmd, hosts=selected_hosts)
 
 
 def execute_script():
