@@ -1,5 +1,6 @@
 import os
-from fabric.api import env, run, sudo, execute, local, settings, hide, open_shell, parallel
+from fabric.api import env, run, sudo, execute, local, settings, \
+    hide, open_shell, parallel
 from fabric.contrib.console import confirm
 import fabric.colors as fab_col
 import paramiko
@@ -71,7 +72,7 @@ def print_hosts():
     If hosts haven't been hand-selected yet, all hosts are selected.
     """
     hosts = map(lambda x: [x, env.passwords.get(x, None)], selected_hosts)
-    print(tabulate(hosts, ["Host", "Password"]))
+    print(fab_col.green(tabulate(hosts, ["Host", "Password"])))
 
 
 def check_hosts():
