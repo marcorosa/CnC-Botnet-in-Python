@@ -114,17 +114,21 @@ def choose_hosts():
     Select the hosts to be used.
     """
     global selected_hosts
-    selected_hosts = []
     mylist = map(lambda (num, h): [num, h], enumerate(env.hosts))
     print(fab_col.blue("Select Hosts (space-separated):"))
     print(fab_col.blue(tabulate(mylist, ["Number", "Host"])))
     choices = raw_input("> ").split()
     # Avoid letters in string index
-    choices = filter(lambda x: x.isalnum(), choices)
+    choices = filter(lambda x: x.isdigit(), choices)
     # Convert to int list
     choices = map(lambda x: int(x), choices)
     # Avoid IndexError
     choices = filter(lambda x: x < len(env.hosts), choices)
+    # Remove duplicates
+    choices = list(set(choices))
+    # If no hosts are selected, keep the current hosts
+    if len(choices) == 0:
+        return
     # Get only selected hosts
     selected_hosts = map(lambda i: env.hosts[i], choices)
 
@@ -162,7 +166,11 @@ def _execute_command(command):
         The results of the execution.
     """
     with settings(warn_only=True):
-        return run(command)
+        try:
+            return run(command)
+        except:
+            print(fab_col.red("Error execution in host %s" % env.host))
+            return None
 
 
 @parallel
@@ -203,9 +211,10 @@ def open_sh():
     """
     mylist = map(lambda (num, h): [num, h], enumerate(selected_hosts))
     print(fab_col.blue(tabulate(mylist, ["Number", "Host"])))
-    n = input("Open shell in host number: ")
     try:
+        n = input("Open shell in host number: ")
         h = selected_hosts[n]
         execute(open_shell, host=h)
-    except Exception:
-        print(fab_col.red("Error. Shell not opened."))
+    except (NameError, IndexError):
+        print(fab_col.red("Error: invalid host selection."))
+        print(fab_col.red("Shell not opened."))
