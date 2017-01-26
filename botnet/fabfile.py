@@ -1,6 +1,7 @@
 import os
 from fabric.api import env, run, sudo, execute, local, settings, \
-    hide, open_shell, parallel, serial
+    hide, open_shell, parallel, serial, put
+from fabric.decorators import hosts
 from fabric.contrib.console import confirm
 import fabric.colors as fab_col
 import paramiko
@@ -186,23 +187,41 @@ def run_command(cmd=None):
         execute(_execute_command, cmd, hosts=selected_hosts)
 
 
+@hosts(selected_hosts)
 def execute_script():
     """
     Execute a script file.
     """
+    # Attention to script name.
+    # Add security checks
     script_file = raw_input("Name of the script: ")
-    host_path = "/tmp"
-    # Copy the script on bots
+    remote_path = "~/"
+    if len(script_file) < 4 or ".." in script_file:
+        # Invalid script
+        return
+
     for h in selected_hosts:
-        with hide('stdout', 'running'):
-            run_locally('scp %s %s:%s' % (script_file,
-                                          h.split(':')[0],
-                                          host_path))
-    # Execute script
-    run_command(host_path + "/" + script_file)
-    # Delete script
-    with hide('running'):
-        run_command("rm " + host_path + "/" + script_file)
+        with settings(host_string=h):
+            with hide('running'):
+                put(script_file, remote_path, mode=777)
+    # Remove the path from the name of the script
+    script_file = script_file.split("/")[-1]
+
+    # Execution
+    extension = script_file.split(".")[-1]
+    if extension == script_file:
+        print(fab_col.red("Invalid script"))
+        return
+    if extension == 'py':
+        run_command("python " + remote_path + script_file)
+    elif extension == "sh" or extension == "bash":
+        run_command(remote_path + script_file)
+    else:
+        print(fab_col.red("Extension not supported"))
+
+    # Delete the script
+    with hide('running', 'stdout'):
+        run_command("rm -f " + remote_path + script_file)
 
 
 def open_sh():
