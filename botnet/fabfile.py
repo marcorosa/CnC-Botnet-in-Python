@@ -216,7 +216,7 @@ def execute_script():
     if extension == 'py':
         run_command("python " + remote_path + script_file)
     elif extension == "sh" or extension == "bash":
-        run_command(remote_path + script_file)
+        run_command("bash " + remote_path + script_file)
     else:
         print(fab_col.red("Extension not supported"))
 
