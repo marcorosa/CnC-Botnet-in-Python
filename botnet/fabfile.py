@@ -122,7 +122,7 @@ def choose_hosts():
     # Avoid letters in string index
     choices = filter(lambda x: x.isdigit(), choices)
     # Convert to int list
-    choices = map(lambda x: int(x), choices)
+    choices = map(int, choices)
     # Avoid IndexError
     choices = filter(lambda x: x < len(env.hosts), choices)
     # Remove duplicates
