@@ -198,6 +198,7 @@ def execute_script():
     remote_path = "~/"
     if len(script_file) < 4 or ".." in script_file:
         # Invalid script
+        print(fab_col.red("Error. Invalid script name."))
         return
 
     for h in selected_hosts:
