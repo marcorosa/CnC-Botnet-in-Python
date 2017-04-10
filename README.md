@@ -1,12 +1,12 @@
 # CnC-Botnet-in-Python
 C&#38;C Botnet written in Python
 
-<h2>Description</h2>
+## Description
 Simple botnet written in Python using fabric. 
 <p>
 The author is not responsible for the use of this code.
 
-<h2>Hosts</h2>
+## Hosts
 It is possible to load hosts from a file _hosts.txt_ included in the main directory of the project.
 The default format for this file is:
 ```bash
@@ -22,7 +22,7 @@ SSH connection is the default authentication way, so if the host knows the publi
 username@host
 ```
 
-<h2>Usage</h2>
+## Usage
 To start the application, simply download the repository
 ```bash
 git clone https://github.com/marcorosa/CC-Botnet-in-Python
@@ -33,7 +33,7 @@ Create the _hosts.txt_ file (optional, see above), and run the start script
 python start.py
 ```
 
-<h2>Example</h2>
+## Example
 ```
 =================================
 MENU
