@@ -1,16 +1,17 @@
 import os
-from fabric.api import env, run, sudo, execute, local, settings, \
-    hide, open_shell, parallel, serial, put
-from fabric.decorators import hosts
-from fabric.contrib.console import confirm
+
 import fabric.colors as fab_col
-import paramiko
 import getpass
+import paramiko
+from fabric.api import (env, run, sudo, execute, local, settings, hide,
+                        open_shell, parallel, serial, put)
+from fabric.contrib.console import confirm
+from fabric.decorators import hosts
 from tabulate import tabulate
 
 
-file_hosts = "hosts.txt"
-paramiko.util.log_to_file("paramiko.log")
+file_hosts = 'hosts.txt'
+paramiko.util.log_to_file('paramiko.log')
 env.colorize_errors = True
 # The selected hosts are the hosts in env (at the beginning)
 selected_hosts = env.hosts
@@ -20,15 +21,15 @@ env.connection_attempts = 2
 
 
 def load_hosts():
-    """
-    Load hosts from hosts.txt.
+    """Load hosts from `hosts.txt` file.
+
     A host can either be in form
     username@host[:port] password
-        or
+    or
     username@host[:port]
     If no port is specified, port 22 is selected.
     """
-    with open(file_hosts, "r") as f:
+    with open(file_hosts, 'r') as f:
         data = f.readlines()
         for line in data:
             try:
@@ -37,52 +38,47 @@ def load_hosts():
                 host = line.strip()
                 password = None
             if len(host.split(':')) == 1:
-                host = host + ":22"
+                host = f'{host}:22'
             env.hosts.append(host)
-            if password is not None:
+            if password:
                 env.passwords[host] = password.strip()
         env.hosts = list(set(env.hosts))  # Remove duplicates
 
 
 def add_host():
+    """Add a new host to the running hosts. The user can decide whether to add
+    the host also to the external `hosts.txt` file.
     """
-    Add a new host to the running hosts.
-    The user can decide whether to add the host also to the external hosts.txt
-    file.
-    """
-    name = raw_input("Username: ")
-    host = raw_input("Host: ")
-    port = input("Port: ")
-    new_host = name + "@" + host + ":" + str(port)
+    name = input('Username: ')
+    host = input('Host: ')
+    port = int(input('Port: '))
+    new_host = f'{name}@{host}:{port}'
     selected_hosts.append(new_host)
     password = None
-    if confirm("Authenticate using a password? "):
-        password = getpass.getpass("Password: ").strip()
+    if confirm('Authenticate using a password? '):
+        password = getpass.getpass('Password: ').strip()
         env.passwords[new_host] = password
 
     # Append the new host to the hosts file
-    if confirm("Add the new host to the hosts file? "):
-        if password is not None:
-            line = new_host + " " + password + "\n"
+    if confirm('Add the new host to the hosts file? '):
+        if password:
+            line = f'{new_host} {password}\n'
         else:
-            line = new_host + "\n"
+            line = f'{new_host}\n'
         with open(file_hosts, 'a') as f:
             f.write(line)
 
 
 def print_hosts():
-    """
-    Print selected hosts.
-    If hosts haven't been hand-selected yet, all hosts are selected.
+    """Print selected hosts. If hosts haven't been hand-selected yet, all hosts
+    are selected.
     """
     hosts = map(lambda x: [x, env.passwords.get(x, None)], selected_hosts)
-    print(fab_col.green(tabulate(hosts, ["Host", "Password"])))
+    print(fab_col.green(tabulate(hosts, ['Host', 'Password'])))
 
 
 def check_hosts():
-    """
-    Check if hosts are active or not and print the result.
-    """
+    """Check if hosts are active or not and print the result."""
     global running_hosts
     running_hosts = dict()
     for host in selected_hosts:
@@ -99,9 +95,7 @@ def check_hosts():
 
 
 def select_running_hosts():
-    """
-    Select all active hosts.
-    """
+    """Select all active hosts."""
     global selected_hosts
     with hide('stdout'):
         check_hosts()
@@ -111,14 +105,12 @@ def select_running_hosts():
 
 
 def choose_hosts():
-    """
-    Select the hosts to be used.
-    """
+    """Select the hosts to be used."""
     global selected_hosts
-    mylist = map(lambda (num, h): [num, h], enumerate(env.hosts))
-    print(fab_col.blue("Select Hosts (space-separated):"))
-    print(fab_col.blue(tabulate(mylist, ["Number", "Host"])))
-    choices = raw_input("> ").split()
+    mylist = map(lambda num, h: [num, h], enumerate(env.hosts))
+    print(fab_col.blue('Select Hosts (space-separated):'))
+    print(fab_col.blue(tabulate(mylist, ['Number', 'Host'])))
+    choices = input('> ').split()
     # Avoid letters in string index
     choices = filter(lambda x: x.isdigit(), choices)
     # Convert to int list
@@ -135,11 +127,9 @@ def choose_hosts():
 
 
 def run_locally(cmd=None):
-    """
-    Execute a command locally.
-    """
-    if cmd is None:
-        cmd = raw_input("Insert command: ")
+    """Execute a command locally."""
+    if not cmd:
+        cmd = input('Insert command: ')
     with settings(warn_only=True):
         local(cmd)
 
@@ -148,11 +138,8 @@ def run_locally(cmd=None):
 # a sudo command must receive the user password
 @serial
 def _execute_sudo(command):
-    """
-    Execute a sudo command on a host.
-
-    Returns:
-        The results of the execution.
+    """Execute a sudo command on a host and return the results of the
+    execution.
     """
     with settings(warn_only=True):
         return sudo(command[4:].strip(), shell=True)
@@ -160,28 +147,21 @@ def _execute_sudo(command):
 
 @parallel
 def _execute_command(command):
-    """
-    Execute a command on a host.
-
-    Returns:
-        The results of the execution.
-    """
+    """Execute a command on a host and return the results of the execution."""
     with settings(warn_only=True):
         try:
             return run(command)
         except:
-            print(fab_col.red("Error execution in host %s" % env.host))
+            print(fab_col.red(f'Error execution in host {env.host}'))
             return None
 
 
 @parallel
 def run_command(cmd=None):
-    """
-    Execute a command on hosts.
-    """
-    if cmd is None:
-        cmd = raw_input("Insert command: ")
-    if cmd.strip()[:4] == "sudo":
+    """Execute a command on hosts."""
+    if not cmd:
+        cmd = input('Insert command: ')
+    if cmd.strip()[:4] == 'sudo':
         execute(_execute_sudo, cmd, hosts=selected_hosts)
     else:
         execute(_execute_command, cmd, hosts=selected_hosts)
@@ -189,16 +169,14 @@ def run_command(cmd=None):
 
 @hosts(selected_hosts)
 def execute_script():
-    """
-    Execute a script file.
-    """
+    """Execute a script file."""
     # Attention to script name.
     # Add security checks
-    script_file = raw_input("Name of the script: ")
-    remote_path = "~/"
-    if len(script_file) < 4 or ".." in script_file:
+    script_file = input('Name of the script: ')
+    remote_path = '~/'
+    if len(script_file) < 4 or '..' in script_file:
         # Invalid script
-        print(fab_col.red("Error. Invalid script name."))
+        print(fab_col.red('Error. Invalid script name.'))
         return
 
     for h in selected_hosts:
@@ -206,35 +184,33 @@ def execute_script():
             with hide('running'):
                 put(script_file, remote_path, mode=777)
     # Remove the path from the name of the script
-    script_file = script_file.split("/")[-1]
+    script_file = script_file.split('/')[-1]
 
     # Execution
-    extension = script_file.split(".")[-1]
+    extension = script_file.split('.')[-1]
     if extension == script_file:
-        print(fab_col.red("Invalid script"))
+        print(fab_col.red('Invalid script'))
         return
     if extension == 'py':
-        run_command("python " + remote_path + script_file)
-    elif extension == "sh" or extension == "bash":
-        run_command("bash " + remote_path + script_file)
+        run_command(f'python {remote_path}{script_file}')
+    elif extension == 'sh' or extension == 'bash':
+        run_command(f'bash {remote_path}{script_file}')
     else:
-        print(fab_col.red("Extension not supported"))
+        print(fab_col.red('Extension not supported'))
 
     # Delete the script
     with hide('running', 'stdout'):
-        run_command("rm -f " + remote_path + script_file)
+        run_command(f'rm -f {remote_path}{script_file}')
 
 
 def open_sh():
-    """
-    Open a shell on a host.
-    """
-    mylist = map(lambda (num, h): [num, h], enumerate(selected_hosts))
-    print(fab_col.blue(tabulate(mylist, ["Number", "Host"])))
+    """Open a shell on a host."""
+    mylist = map(lambda num, h: [num, h], enumerate(selected_hosts))
+    print(fab_col.blue(tabulate(mylist, ['Number', 'Host'])))
     try:
-        n = input("Open shell in host number: ")
+        n = int(input('Open shell in host number: '))
         h = selected_hosts[n]
         execute(open_shell, host=h)
     except (NameError, IndexError):
-        print(fab_col.red("Error: invalid host selection."))
-        print(fab_col.red("Shell not opened."))
+        print(fab_col.red('Error: invalid host selection.'))
+        print(fab_col.red('Shell not opened.'))
