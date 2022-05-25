@@ -28,6 +28,12 @@ To start the application, simply download the repository
 git clone https://github.com/marcorosa/CC-Botnet-in-Python
 cd CC-Botnet-in-Python
 ```
+
+Install the dependencies
+```bash
+pip install -r requirements.txt
+```
+
 Create the _hosts.txt_ file (optional, see above), and run the start script
 ```bash
 python start.py
