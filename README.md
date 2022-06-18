@@ -25,8 +25,8 @@ username@host
 ## Usage
 To start the application, simply download the repository
 ```bash
-git clone https://github.com/marcorosa/CC-Botnet-in-Python
-cd CC-Botnet-in-Python
+git clone https://github.com/marcorosa/CnC-Botnet-in-Python
+cd CnC-Botnet-in-Python
 ```
 
 Install the dependencies
